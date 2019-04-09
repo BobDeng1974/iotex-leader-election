@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -55,13 +56,18 @@ func (e *Elector) Campaign(ctx context.Context, key string, val string) {
 		log.Panicf("Error when campaigning an election: %s", err.Error())
 	}
 	log.Printf("Node %s becomes the leader", val)
-	resp, err := http.Get(fmt.Sprintf("%s/ha?activate=true", e.iotexEndpoint))
-	if err != nil {
-		log.Panicf("Error when activating iotex node: %s", err.Error())
+	for ; ; {
+		resp, err := http.Get(fmt.Sprintf("%s/ha?activate=true", e.iotexEndpoint))
+		if err != nil {
+			log.Printf("Error when activating iotex node: %s", err.Error())
+		} else if resp.StatusCode != http.StatusOK {
+			log.Printf("Error when activating iotex node: status code %d", resp.StatusCode)
+		} else {
+			break
+		}
+		time.Sleep(10*time.Second)
 	}
-	if resp.StatusCode != http.StatusOK {
-		log.Panicf("Error when activating iotex node: status code %d", resp.StatusCode)
-	}
+	log.Printf("Activated iotex server")
 }
 
 // Resign resigns the proxy from the leader if it is
@@ -74,11 +80,16 @@ func (e *Elector) Resign(ctx context.Context) {
 	}
 	e.election = nil
 	log.Printf("Node resign the leader")
-	resp, err := http.Get(fmt.Sprintf("%s/ha?activate=false", e.iotexEndpoint))
-	if err != nil {
-		log.Panicf("Error when deactivating iotex node: %s", err.Error())
+	for ; ; {
+		resp, err := http.Get(fmt.Sprintf("%s/ha?activate=false", e.iotexEndpoint))
+		if err != nil {
+			log.Printf("Error when deactivating iotex node: %s", err.Error())
+		} else if resp.StatusCode != http.StatusOK {
+			log.Printf("Error when deactivating iotex node: status code %d", resp.StatusCode)
+		} else {
+			break
+		}
+		time.Sleep(10*time.Second)
 	}
-	if resp.StatusCode != http.StatusOK {
-		log.Panicf("Error when deactivating iotex node: status code %d", resp.StatusCode)
-	}
+	log.Printf("Deactivated iotex server")
 }

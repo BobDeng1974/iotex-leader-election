@@ -1,0 +1,25 @@
+version: "3"
+services:
+  elector:
+    image: zjshen/iotex-leader-election
+    command: [elector, "-etcd={etcd endpoint}", "iotex=http://127.0.0.1:9009", -key=/iotex-server, -value=$IOTEX_HA_ID]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  server:
+    image: zjshen/iotex-core:ha
+    command: [iotex-server, -config-path=/etc/iotex-server/config.yaml, -genesis-path=/etc/iotex-server/genesis.yaml, -plugin=gateway]
+    ports:
+      - 4689:4689
+      - 8080:8080
+      - 9009:9009
+      - 14014:14014
+    volumes:
+      - $IOTEX_HOME/data:/var/data
+      - $IOTEX_HOME/log:/var/log
+      - $IOTEX_HOME/etc:/etc/iotex-server
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
