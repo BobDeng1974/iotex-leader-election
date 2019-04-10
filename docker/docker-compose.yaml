@@ -2,7 +2,7 @@ version: "3"
 services:
   elector:
     image: zjshen/iotex-leader-election
-    command: [elector, "-etcd={etcd endpoint}", "-iotex=http://server:9009", -key=/iotex-server, -value={ha id}]
+    command: [elector, "-etcd={etcd endpoint}", "-iotexAdmin=http://server:9009", "-iotexProbe=http://server:8080", -key=/iotex-server, -value={ha id}]
     deploy:
       replicas: 1
       restart_policy:

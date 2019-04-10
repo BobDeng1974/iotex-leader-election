@@ -19,12 +19,13 @@ type Elector struct {
 	etcd          *clientv3.Client
 	session       *concurrency.Session
 	election      *concurrency.Election
-	iotexEndpoint string
+	iotexAdminEndpoint string
+	iotexHealthEndpoint string
 	mutex         sync.Mutex
 }
 
 // New constructs an election proxy
-func New(etcdEndpoints []string, iotexEndpoint string) *Elector {
+func New(etcdEndpoints []string, iotexAdminEndpoint string, iotexHealthEndpoint string) *Elector {
 	etcd, err := clientv3.New(clientv3.Config{
 		Endpoints: etcdEndpoints,
 	})
@@ -38,7 +39,7 @@ func New(etcdEndpoints []string, iotexEndpoint string) *Elector {
 	return &Elector{
 		etcd:          etcd,
 		session:       session,
-		iotexEndpoint: iotexEndpoint,
+		iotexAdminEndpoint: iotexAdminEndpoint,
 	}
 }
 
@@ -57,7 +58,7 @@ func (e *Elector) Campaign(ctx context.Context, key string, val string) {
 	}
 	log.Printf("Node %s becomes the leader", val)
 	for ; ; {
-		resp, err := http.Get(fmt.Sprintf("%s/ha?activate=true", e.iotexEndpoint))
+		resp, err := http.Get(fmt.Sprintf("%s/ha?activate=true", e.iotexAdminEndpoint))
 		if err != nil {
 			log.Printf("Error when activating iotex node: %s", err.Error())
 		} else if resp.StatusCode != http.StatusOK {
@@ -67,7 +68,22 @@ func (e *Elector) Campaign(ctx context.Context, key string, val string) {
 		}
 		time.Sleep(10*time.Second)
 	}
-	log.Printf("Activated iotex server")
+	go func() {
+		log.Printf("Activated iotex server")
+		lastSeen := time.Now()
+		for ; time.Since(lastSeen) > time.Minute ; {
+			resp, err := http.Get(fmt.Sprintf("%s/readiness", e.iotexAdminEndpoint))
+			if err != nil {
+				log.Printf("Error when check iotex node readiness: %s", err.Error())
+			} else if resp.StatusCode != http.StatusOK {
+				log.Printf("Error when check iotex node readiness: status code %d", resp.StatusCode)
+			} else {
+				lastSeen = time.Now()
+			}
+			time.Sleep(10*time.Second)
+		}
+		log.Panic("Iotex node is not ready")
+	}()
 }
 
 // Resign resigns the proxy from the leader if it is
@@ -81,7 +97,7 @@ func (e *Elector) Resign(ctx context.Context) {
 	e.election = nil
 	log.Printf("Node resign the leader")
 	for ; ; {
-		resp, err := http.Get(fmt.Sprintf("%s/ha?activate=false", e.iotexEndpoint))
+		resp, err := http.Get(fmt.Sprintf("%s/ha?activate=false", e.iotexAdminEndpoint))
 		if err != nil {
 			log.Printf("Error when deactivating iotex node: %s", err.Error())
 		} else if resp.StatusCode != http.StatusOK {
