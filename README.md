@@ -24,4 +24,14 @@ docker run -d zjshen/iotex-leader-election:latest elector -etcd=[etcd endpoint] 
 
 ## Examples
 
+Here are the examples about how to use elector together with iotex server to deploy the HA delegate cluster:
+
 - [docker-compose](docker/README.md)
+
+## Dependency
+
+The leader election solution here depends on [etcd](https://github.com/etcd-io/etcd), you need to deploy it to
+orchestrate the HA delegate cluster.
+
+I deployed etcd via [helm chart](https://github.com/bitnami/charts/tree/master/bitnami/etcd), but there are many other
+way to deploy it.

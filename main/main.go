@@ -3,9 +3,7 @@ package main
 import (
 	"context"
 	"flag"
-	"log"
-
-	elector "github.com/zjshen14/iotex-leader-election"
+	"github.com/zjshen14/iotex-leader-election"
 )
 
 var (
@@ -25,8 +23,8 @@ func init() {
 
 func main() {
 	e := elector.New([]string{etcd}, iotex)
-	e.Campaign(context.Background(), key, val)
-	log.Print("ok")
+	ctx, _ := context.WithCancel(context.TODO())
+	e.Campaign(ctx, key, val)
 	defer e.Resign(context.Background())
 
 	select {}

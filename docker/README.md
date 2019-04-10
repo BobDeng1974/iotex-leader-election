@@ -10,5 +10,3 @@ network:
 system:
   active: false
 ```
-
-- Define `$IOTEX_HA_ID` in the environment.
