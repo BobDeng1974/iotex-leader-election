@@ -40,6 +40,7 @@ func New(etcdEndpoints []string, iotexAdminEndpoint string, iotexHealthEndpoint 
 		etcd:          etcd,
 		session:       session,
 		iotexAdminEndpoint: iotexAdminEndpoint,
+		iotexHealthEndpoint: iotexHealthEndpoint,
 	}
 }
 
@@ -71,8 +72,8 @@ func (e *Elector) Campaign(ctx context.Context, key string, val string) {
 	go func() {
 		log.Printf("Activated iotex server")
 		lastSeen := time.Now()
-		for ; time.Since(lastSeen) > time.Minute ; {
-			resp, err := http.Get(fmt.Sprintf("%s/readiness", e.iotexAdminEndpoint))
+		for ; time.Since(lastSeen) <= time.Minute ; {
+			resp, err := http.Get(fmt.Sprintf("%s/health", e.iotexHealthEndpoint))
 			if err != nil {
 				log.Printf("Error when check iotex node readiness: %s", err.Error())
 			} else if resp.StatusCode != http.StatusOK {
@@ -80,9 +81,10 @@ func (e *Elector) Campaign(ctx context.Context, key string, val string) {
 			} else {
 				lastSeen = time.Now()
 			}
+			log.Panic("Iotex node is healthy")
 			time.Sleep(10*time.Second)
 		}
-		log.Panic("Iotex node is not ready")
+		log.Panic("Iotex node is not healthy for a minute")
 	}()
 }
 
