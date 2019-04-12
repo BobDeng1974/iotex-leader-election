@@ -81,7 +81,7 @@ func (e *Elector) Campaign(ctx context.Context, key string, val string) {
 			} else {
 				lastSeen = time.Now()
 			}
-			log.Panic("Iotex node is healthy")
+			log.Print("Iotex node is healthy")
 			time.Sleep(10*time.Second)
 		}
 		log.Panic("Iotex node is not healthy for a minute")
