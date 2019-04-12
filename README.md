@@ -13,13 +13,13 @@ the others will only sync blocks.
 
 ```
 make build
-bin/elector -etcd=[etcd endpoint] -iotex=[iotex endpoint] -key=[e.g., /iotex-server] -value=[identifier in the cluster]
+bin/elector -etcd=[etcd endpoint] -iotexAdmin=[iotex admin endpoint] iotexProbe=[iotex health endpoint] -key=[e.g., /iotex-server] -value=[identifier in the cluster]
 ```
 
 - Docker:
 
 ```
-docker run -d zjshen/iotex-leader-election:latest elector -etcd=[etcd endpoint] -iotex=[iotex endpoint] -key=[e.g., /iotex-server] -value=[identifier in the cluster]
+docker run -d zjshen/iotex-leader-election:latest elector -etcd=[etcd endpoint] -iotexAdmin=[iotex admin endpoint] iotexProbe=[iotex health endpoint] -key=[e.g., /iotex-server] -value=[identifier in the cluster]
 ```
 
 ## Examples
@@ -35,3 +35,9 @@ orchestrate the HA delegate cluster.
 
 I deployed etcd via [helm chart](https://github.com/bitnami/charts/tree/master/bitnami/etcd), but there are many other
 way to deploy it.
+
+## Misc
+
+IoTeX's HA feature is orthogonal to the leader election service. You can build similar solution based on
+[Kubernetes election](https://github.com/kubernetes/contrib/tree/master/election),
+[Zookeeper](https://zookeeper.apache.org/doc/current/recipes.html#sc_leaderElection) and etc.
