@@ -1,8 +1,8 @@
 # IoTeX Leader Election
 
-This is a proxy to use [etcd](https://github.com/etcd-io/etcd) to do leader election, and control
-[iotex node](https://github.com/iotexproject/iotex-core/) to run in either active or standby mode in a high availability
-(HA) cluster.
+[IoTeX server](https://github.com/iotexproject/iotex-core/) now supports running in active or standby mode. Only when running in active mode, the node will participate into consensus and produce blocks, otherwise, it will only passively listen to the blocks. This could be controlled by using the adming endpoint (e.g. `http://localhost:9009/ha`). Given this, it's easier to setup a backup node, which could use the same operator key. You only need to manually make one node run in active mode and the others run in standby mode.
+
+A more advanced way is use leader election service to do the aforementioned orchestration automatically. This repo provides a proxy to use [etcd](https://github.com/etcd-io/etcd) to do leader election, and control iotex server to run in either active or standby mode in a high availability (HA) cluster.
 
 In the HA cluster, all nodes are using the same key, but only one node will actively participant into consensus, while
 the others will only sync blocks. 
